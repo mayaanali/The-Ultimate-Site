@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate GOAT Master-Plan (Extreme Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #FAFAF9; color: #1C1917; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .chart-container { position: relative; width: 100%; max-width: 300px; margin: auto; height: 300px; }
+        input[type="checkbox"] { accent-color: #D97706; width: 1.25rem; height: 1.25rem; cursor: pointer; }
+        .completed-text { text-decoration: line-through; color: #A8A29E; }
+        .phase-active { background-color: #FEF3C7; border-left: 4px solid #D97706; font-weight: 600; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-80 bg-white border-r border-stone-200 flex flex-col h-full shrink-0 overflow-y-auto">
+        <div class="p-6 border-b border-stone-100">
+            <h1 class="text-2xl font-bold text-stone-900">GOAT Dashboard</h1>
+            <div class="chart-container mt-4"><canvas id="progressChart"></canvas></div>
+            <div class="text-center mt-2 text-xl font-bold" id="progress-text">0%</div>
+        </div>
+        <nav id="nav-list" class="p-4 space-y-2"></nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-10">
+        <div id="content" class="max-w-4xl mx-auto">
+            <h2 id="phase-title" class="text-4xl font-bold mb-4"></h2>
+            <p id="phase-desc" class="text-lg text-stone-600 mb-8"></p>
+            <div id="tasks" class="space-y-6"></div>
+        </div>
+    </main>
+
+    <script>
+        const data = [
+            { id: 0, title: "1. The Foundation (Math & Systems)", desc: "The bedrock of all advanced engineering.", tasks: [
+                { id: '1a', title: "3Blue1Brown Linear Algebra & Calculus", yt: "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", comp: false },
+                { id: '1b', title: "CS50: Intro to Computer Science (Harvard)", yt: "https://www.youtube.com/playlist?list=PLhQjrBD2T382J4T3pE9V4B4Xy9y_Vn5Gg", comp: false },
+                { id: '1c', title: "C++ Programming (Cherno's C++ Series)", yt: "https://www.youtube.com/playlist?list=PLlrATfBNZ98dudnM48yfGUldqGD0S4FFb", comp: false }
+            ]},
+            { id: 1, title: "2. The Full Stack (Web & Cloud)", desc: "Scaling interfaces and distributed backends.", tasks: [
+                { id: '2a', title: "Full Stack Open (University of Helsinki)", yt: "https://fullstackopen.com/", comp: false },
+                { id: '2b', title: "System Design Interview (ByteByteGo)", yt: "https://www.youtube.com/@ByteByteGo", comp: false },
+                { id: '2c', title: "Distributed Systems (MIT 6.824)", yt: "https://www.youtube.com/playlist?list=PLrw6aB1aT-0yC1V1l0ZgQo39L43Z_Fq1e", comp: false }
+            ]},
+            { id: 2, title: "3. Advanced AI & LLMs", desc: "Building the intelligence engine.", tasks: [
+                { id: '3a', title: "Karpathy's Neural Network Series", yt: "https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ", comp: false },
+                { id: '3b', title: "Hugging Face NLP Course (End-to-End)", yt: "https://huggingface.co/learn/nlp-course", comp: false },
+                { id: '3c', title: "Stanford CS224N: NLP with Deep Learning", yt: "https://www.youtube.com/playlist?list=PLoROMvodv4rOABRxixwqCEEZEJtehTBU_", comp: false }
+            ]},
+            { id: 3, title: "4. Game & Graphics Engine", desc: "Rendering, Physics, and Memory.", tasks: [
+                { id: '4a', title: "LearnOpenGL (Graphics pipeline deep dive)", yt: "https://learnopengl.com/", comp: false },
+                { id: '4b', title: "Game Engine Architecture (Handmade Hero)", yt: "https://handmadehero.org/", comp: false },
+                { id: '4c', title: "GPU Programming (CUDA for AI)", yt: "https://www.youtube.com/playlist?list=PL-51HRZ4B7eS5h5H4x6J9B7p8-W7zGgT-", comp: false }
+            ]}
+        ];
+
+        let active = 0;
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const chart = new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [0, 100], backgroundColor: ['#D97706', '#E7E5E4'] }] }, options: { cutout: '75%' } });
+
+        function render() {
+            const p = data[active];
+            document.getElementById('phase-title').innerText = p.title;
+            document.getElementById('phase-desc').innerText = p.desc;
+            const taskList = document.getElementById('tasks');
+            taskList.innerHTML = '';
+            p.tasks.forEach(t => {
+                taskList.innerHTML += `<div class="bg-white p-4 border rounded-xl flex items-center gap-4">
+                    <input type="checkbox" ${t.comp?'checked':''} onchange="toggle('${t.id}')">
+                    <div>
+                        <div class="font-bold ${t.comp?'completed-text':''}">${t.title}</div>
+                        <a href="${t.yt}" target="_blank" class="text-sm text-amber-600 underline">Access Course/Playlist</a>
+                    </div>
+                </div>`;
+            });
+            updateNav();
+        }
+
+        function toggle(id) {
+            data.forEach(p => p.tasks.forEach(t => { if(t.id === id) t.comp = !t.comp }));
+            updateProgress();
+            render();
+        }
+
+        function updateNav() {
+            const nav = document.getElementById('nav-list');
+            nav.innerHTML = '';
+            data.forEach((p, i) => {
+                nav.innerHTML += `<div class="p-3 cursor-pointer rounded-lg ${active===i?'phase-active':''}" onclick="active=${i}; render()">${p.title}</div>`;
+            });
+        }
+
+        function updateProgress() {
+            let total = 0, comp = 0;
+            data.forEach(p => { total += p.tasks.length; comp += p.tasks.filter(t => t.comp).length; });
+            const p = total === 0 ? 0 : Math.round((comp/total)*100);
+            document.getElementById('progress-text').innerText = `${p}% Complete`;
+            chart.data.datasets[0].data = [comp, total-comp];
+            chart.update();
+        }
+
+        render();
+    </script>
+</body>
+</html>
